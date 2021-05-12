@@ -87,48 +87,65 @@ get_ipython().system_raw('./ngrok http 4050 &')
 We would be able to view the jobs and their stages at the link created
 
 ## Step 4
+Now, we can import SparkSession from pyspark.sql and create a SparkSession, which is the entry point to Spark. \
+You can give a name to the session using appName() and add some configurations with config() if you wish.
+
+````
+spark = SparkSession.builder\
+        .master("local[*]")\
+        .appName("New York Cab Info")\
+        .config('spark.ui.port', '4050')\
+        .getOrCreate()
+print("A Technical Case Study of New York Cab Trips")
+````
+To print the details concerning Spark
+````
+spark
+````
+
+## Step 5
 ### Loading data into PySpark
 First thing first, we need to load the dataset. We will use the read.csv module. The inferSchema parameter provided will enable Spark to automatically determine the data type for each column but it has to go over the data once. If you don’t want that to happen, then you can instead provide the schema explicitly in the schema parameter.
 ````
 data = spark.read.csv("train.csv", header=True, inferSchema=True)
 ````
-## Step 5
+## Step 6
 ### Show column details
 The first step in an exploratory data analysis is to check out the schema of the dataframe. This will give you a bird’s-eye view of the columns in the dataframe along with their data types.
 
 ````
 data.printSchema()
 ````
-## Step 6
+## Step 7
 ### Display Rows
 You can provide the number of rows you want to print within the parenthesis.
 ````
 data.show(5)
 ````
-## Step 7
+## Step 8
 ### Number of rows in DF
 to know the total number of rows in the dataframe
 ````
 df.count()
 ````
-## Step 8
+## Step 9
 ### Display specific columns
 To view some specific columns from the dataframe
 ````
 data.select("pickup_datetime","dropoff_datetime").show(5)
 ````
-## Step 9
+## Step 10
 ### Describing the columns
 Often when we are working with numeric features, we want to have a look at the statistics regarding the dataframe.
 ````
 data.describe().show()
 ````
-## Step 10
+## Step 11
 ### To  import all PySpark Sql types libraries
 ````
 from pyspark.sql.types import *
 ````
-## Step 11
+## Step 12
 Converting into timestamp
 ````
 data_conv = data.withColumn("pickup_datetime", data["pickup_datetime"].cast(TimestampType()))
@@ -137,12 +154,12 @@ data_conv2 = data_conv.withColumn("dropoff_datetime", data_conv["dropoff_datetim
 
 data_conv2.printSchema()
 ````
-## Step 12
+## Step 13
 To  import all PySpark Sql functions
 ````
 import pyspark.sql.functions as f
 ````
-## Step 13
+## Step 14
 New columns to show the pickup and dropoff days. \
 ``EEEE`` stands for showing the complete name of the day.
 ````
@@ -152,7 +169,7 @@ data_conv4 = data_conv3.withColumn("dropoff_day", f.date_format("dropoff_datetim
 
 data_conv4.show()
 ````
-## Step 14
+## Step 15
 New columns to show the pickup and dropoff day. \
 ``F`` stands for showing the day of the week in numbers and we convert the columns into an IntegerType
 ````
@@ -162,7 +179,7 @@ data_conv6 = data_conv5.withColumn("dropoff_day_no", f.date_format("dropoff_date
 
 data_conv6.printSchema()
 ````
-## Step 15
+## Step 16
 New columns to show the pickup and dropoff hours \
 ``H`` stands for showing the hour of the day and we convert the columns into an IntegerType
 ````
@@ -172,7 +189,7 @@ data_conv8 = data_conv7.withColumn("dropoff_hour", f.date_format("dropoff_dateti
 
 data_conv8.printSchema()
 ````
-## Step 16
+## Step 17
 New columns to show the pickup and dropoff months \
 ``M`` stands for showing the pickup and dropoff months and we convert the columns into IntegerType
 
@@ -183,7 +200,7 @@ data_conv10 = data_conv9.withColumn("dropoff_month", f.date_format("dropoff_date
 
 data_conv10.printSchema()
 ````
-## Step 17
+## Step 18
 A User Defined function to calculate time of day per 4-hour period \
 Since we are going to iterate over the dataset, we use the lambda function to do iterations
 
@@ -201,7 +218,7 @@ def time_of_day(x):
 col_time_of_day = udf(lambda z: time_of_day(z))
 spark.udf.register("col_time_of_day", time_of_day, StringType())
 ````
-## Step 18
+## Step 19
 New columns to show the pickup and dropoff time of the day
 ````
 data_conv11 = data_conv10.withColumn("pickup_timeofday", col_time_of_day("pickup_hour"))
@@ -213,7 +230,7 @@ data_conv12.show()
 data_conv12.printSchema()
 ````
 
-## Step 19
+## Step 20
 A User Defined function to calculate the distance between two coordinates
 ````
 def cal_distance(pickup_lat , pickup_long , dropoff_lat, dropoff_long):
@@ -225,38 +242,20 @@ def cal_distance(pickup_lat , pickup_long , dropoff_lat, dropoff_long):
 cal_distance_udf = udf(lambda x1,x2,y1,y2: cal_distance(x1,x2,y1,y2))
 spark.udf.register("cal_distance_udf", cal_distance, DoubleType())
 ````
-## Step 20
+## Step 21
 New column to show the distances in km of trips
 ````
 data_conv13 = data_conv12.withColumn("distance", cal_distance_udf("pickup_latitude", "pickup_longitude", "dropoff_latitude", "dropoff_longitude"))
 
 data_conv13.show()
 ````
-
-## Step 21
-Now, we can import SparkSession from pyspark.sql and create a SparkSession, which is the entry point to Spark. \
-You can give a name to the session using appName() and add some configurations with config() if you wish.
-
-````
-spark = SparkSession.builder\
-        .master("local[*]")\
-        .appName("New York Cab Info")\
-        .config('spark.ui.port', '4050')\
-        .getOrCreate()
-print("A Technical Case Study of New York Cab Trips")
-````
-To print the details concerning Spark
-````
-spark
-````
-
-## Step 22
+## Step 23
 Spark Sql query to display the total trips using id column
 ````
 data_conv13.createOrReplaceTempView("data_conv13")
 spark.sql("SELECT COUNT(id) AS total_trip from data_conv13").show()
 ````
-## Step 23
+## Step 24
 To show the number of trips made according to the day of the week using id and vendor_id columns
 ````
 spark.sql("SELECT pickup_day, COUNT(id) AS total_trips FROM data_conv13 GROUP BY pickup_day ORDER BY total_trips DESC").show()
@@ -264,7 +263,7 @@ spark.sql("SELECT pickup_day, COUNT(id) AS total_trips FROM data_conv13 GROUP BY
 ````
 spark.sql("SELECT pickup_day, COUNT(vendor_id) AS total_trips FROM data_conv13 GROUP BY pickup_day ORDER BY total_trips DESC").show()
 ````
-## Step 24
+## Step 25
 To show the number of trips made according to the time of day using id and vendor_id columns
 ````
 spark.sql("SELECT pickup_timeofday, COUNT(vendor_id) AS total_trips_time_of_day FROM data_conv13 GROUP BY pickup_timeofday ORDER BY total_trips_time_of_day DESC").show()
@@ -272,12 +271,12 @@ spark.sql("SELECT pickup_timeofday, COUNT(vendor_id) AS total_trips_time_of_day 
 ````
 spark.sql("SELECT pickup_timeofday, COUNT(id) AS total_trips_time_of_day FROM data_conv13 GROUP BY pickup_timeofday ORDER BY total_trips_time_of_day DESC").show()
 ````
-## Step 25
+## Step 26
 To show the number of km traveled per day of the week
 ````
 spark.sql("SELECT pickup_day, SUM(distance) AS km_traveled_per_day FROM data_conv13 GROUP BY pickup_day ORDER BY km_traveled_per_day DESC").show()
 ````
-## Step 26
+## Step 27
 ### Save to file
 Finally, after doing all the analysis and we want to save the results into a new CSV file
 ````
