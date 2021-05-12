@@ -291,3 +291,7 @@ data_conv13.rdd.getNumPartitions()
 
 ## Conclusion
 In this PySpark project, we were able to do some analysis on our dataset and query the dataset.
+
+## Author
+**Aminu Habib Abiola**
+habib.aminu@edu.dsti.institute
