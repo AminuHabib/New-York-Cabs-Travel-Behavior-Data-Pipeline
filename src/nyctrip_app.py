@@ -57,6 +57,19 @@ findspark.find()
 get_ipython().system_raw('./ngrok http 4050 &')
 !curl -s http://localhost:4040/api/tunnels
 
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder\
+        .master("local[*]")\
+        .appName("New York Cab Info")\
+        .config('spark.ui.port', '4050')\
+        .getOrCreate()
+print("A Technical Case Study of New York Cab Trips")
+
+# os.environ['PYSPARK_SUBMIT_ARGS']= spark.sparkContext.addPyFile('../')
+
+spark
+
 """Loading data into PySpark"""
 
 data = spark.read.csv("train.csv", header=True, inferSchema=True)
@@ -161,7 +174,7 @@ from geopy.distance import great_circle
 def cal_distance(pickup_lat , pickup_long , dropoff_lat, dropoff_long):
     start_coordinates = pickup_lat, pickup_long
     stop_coordinates = dropoff_lat, dropoff_long
-    
+
     return great_circle(start_coordinates, stop_coordinates).km
 
 cal_distance_udf = udf(lambda x1,x2,y1,y2: cal_distance(x1,x2,y1,y2))
@@ -172,19 +185,6 @@ spark.udf.register("cal_distance_udf", cal_distance, DoubleType())
 data_conv13 = data_conv12.withColumn("distance", cal_distance_udf("pickup_latitude", "pickup_longitude", "dropoff_latitude", "dropoff_longitude"))
 
 data_conv13.show()
-
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder\
-        .master("local[*]")\
-        .appName("New York Cab Info")\
-        .config('spark.ui.port', '4050')\
-        .getOrCreate()
-print("A Technical Case Study of New York Cab Trips")
-
-# os.environ['PYSPARK_SUBMIT_ARGS']= spark.sparkContext.addPyFile('../')
-
-spark
 
 """Sql query to display the total trips"""
 
