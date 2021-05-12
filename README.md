@@ -91,6 +91,7 @@ Now, we can import SparkSession from pyspark.sql and create a SparkSession, whic
 You can give a name to the session using appName() and add some configurations with config() if you wish.
 
 ````
+from pyspark.sql import SparkSession
 spark = SparkSession.builder\
         .master("local[*]")\
         .appName("New York Cab Info")\
